@@ -1,0 +1,143 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f5f5f5;
+  color: #222;
+}
+
+button {
+  font: inherit;
+}
+
+.app {
+  min-height: 100vh;
+}
+
+.header {
+  padding: 32px;
+  text-align: center;
+  background: #222;
+  color: white;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 32px;
+}
+
+.header p {
+  margin: 8px 0 0;
+}
+
+.main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+
+.main h2 {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.algorithm-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.algorithm-grid button {
+  padding: 24px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.algorithm-grid button:hover {
+  background: #eee;
+}
+
+@media (max-width: 600px) {
+  .algorithm-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.visualizer {
+  height: 350px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.bar-container {
+  display: flex;
+  align-items: flex-end;
+  height: 100%;
+}
+
+.bar {
+  width: 50px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 8px;
+  background: #333;
+  color: white;
+  border-radius: 4px 4px 0 0;
+}
+
+.bar.comparing {
+  background: #888;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.controls button {
+  padding: 10px 20px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+}
+
+.controls button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.step-info {
+  text-align: center;
+  margin-top: 16px;
+}
+
+.algorithm-select {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.algorithm-select select {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: white;
+}

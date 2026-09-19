@@ -1,40 +1,42 @@
-export type SortStep={
-    array:number[]
-    comparing:number[]
-    operation:'compare'|'swap'|'write'
-}
+export type SortStep = {
+    array: number[];
+    comparing: number[];
+    operation: "compare" | "swap" | "write";
+};
 
-export function bubbleSort(input:number[]):SortStep[]{
-    const array=[...input]
-    const steps:SortStep[]=[]
+export function bubbleSort(input: number[]): SortStep[] {
+    const array = [...input];
+    const steps: SortStep[] = [];
 
-    for(let i=0;i<array.length-1;i++){
-        let swapped=false
+    for (let i = 0; i < array.length - 1; i++) {
+        let swapped = false;
 
-        for(let j=0;j<array.length-1-i;j++){
-            const comparing=[j,j+1]
+        for (let j = 0; j < array.length - 1 - i; j++) {
+            const comparing = [j, j + 1];
 
             steps.push({
                 array: [...array],
                 comparing,
-                operation: 'compare',
-            })
+                operation: "compare",
+            });
 
-            if(array[j]>array[j+1]){
-                ;[array[j],array[j+1]]=[array[j+1],array[j]]
-                
-                swapped=true
-                
+            if (array[j] > array[j + 1]) {
+                [array[j], array[j + 1]] = [array[j + 1], array[j]];
+
+                swapped = true;
+
                 steps.push({
-                    array:[...array],
+                    array: [...array],
                     comparing,
-                    operation:'swap',
-                })
+                    operation: "swap",
+                });
             }
         }
-        if(!swapped){
-            break
+
+        if (!swapped) {
+            break;
         }
     }
-    return steps
+
+    return steps;
 }

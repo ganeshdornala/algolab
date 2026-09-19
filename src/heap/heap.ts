@@ -19,11 +19,15 @@ function swap(array: number[], first: number, second: number): void {
 }
 
 function recordStep(
-    steps: HeapStep[],
+    steps: HeapStep[] | undefined,
     heap: number[],
     action: string,
     activeIndices: number[] = [],
 ): void {
+    if (!steps) {
+        return;
+    }
+
     steps.push({
         heap: [...heap],
         action,
@@ -65,7 +69,7 @@ function siftDown(
         swap(heap, index, priorityIndex);
 
         recordStep(
-            steps ?? [],
+            steps,
             heap,
             `Swap ${heap[priorityIndex]} and ${heap[index]} to restore the heap property.`,
             [index, priorityIndex],
@@ -91,7 +95,7 @@ function siftUp(
         swap(heap, index, parent);
 
         recordStep(
-            steps ?? [],
+            steps,
             heap,
             `Swap ${heap[parent]} and ${heap[index]} to restore the heap property.`,
             [parent, index],

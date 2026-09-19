@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { ChangeEvent } from "react";
 
 import { bubbleSort, type SortStep } from "./sorting/bubbleSort";
@@ -10,13 +10,29 @@ import { quickSort } from "./sorting/quickSort";
 import { binarySearch, type SearchStep } from "./searching/binarySearch";
 
 import GraphVisualizer from "./graph/GraphVisualizer";
-
 import HeapVisualizer from "./heap/HeapVisualizer";
 
 const initialArray = [5, 2, 8, 1, 4];
 const initialSearchArray = [1, 2, 3, 4, 5];
 
-const algorithmInfo: Record<string, { time: string; space: string }> = {
+type SortingAlgorithm =
+  | "bubble"
+  | "selection"
+  | "insertion"
+  | "merge"
+  | "quick";
+
+type VisualizationMode = "sorting" | "searching" | "graph" | "heap";
+
+const sortingAlgorithms: Record<SortingAlgorithm, (array: number[]) => SortStep[]> = {
+  bubble: bubbleSort,
+  selection: selectionSort,
+  insertion: insertionSort,
+  merge: mergeSort,
+  quick: quickSort,
+};
+
+const algorithmInfo: Record<SortingAlgorithm, { time: string; space: string }> = {
   bubble: {
     time: "Best: O(n) · Average/Worst: O(n²)",
     space: "O(1) auxiliary space",
@@ -40,11 +56,9 @@ const algorithmInfo: Record<string, { time: string; space: string }> = {
 };
 
 function App() {
-  const [mode, setMode] = useState<
-    "sorting"|"searching"|"graph"|"heap"
-  >("sorting");
+  const [mode, setMode] = useState<VisualizationMode>("sorting");
 
-  const [algorithm, setAlgorithm] = useState("bubble");
+  const [algorithm, setAlgorithm] = useState<SortingAlgorithm>("bubble");
   const [steps, setSteps] = useState<SortStep[]>(() => bubbleSort(initialArray));
   const [stepIndex, setStepIndex] = useState(-1);
 
@@ -58,34 +72,25 @@ function App() {
   const [speed, setSpeed] = useState(500);
 
   // Sorting visualization state
-  const currentArray =stepIndex === -1 ? initialArray : steps[stepIndex].array;
+  const currentArray =
+    stepIndex === -1 ? initialArray : steps[stepIndex].array;
 
-  const comparing =stepIndex === -1 ? [] : steps[stepIndex].comparing;
+  const comparing =
+    stepIndex === -1 ? [] : steps[stepIndex].comparing;
 
   // Binary Search visualization state
-  const currentSearchStep =searchStepIndex === -1 ? null : searchSteps[searchStepIndex];
+  const currentSearchStep =
+    searchStepIndex === -1 ? null : searchSteps[searchStepIndex];
 
   const searchLow = currentSearchStep?.low ?? 0;
   const searchHigh = currentSearchStep?.high ?? initialSearchArray.length - 1;
   const searchMid = currentSearchStep?.mid ?? -1;
 
   function handleAlgorithmChange(event: ChangeEvent<HTMLSelectElement>) {
-    const selectedAlgorithm = event.target.value;
+    const selectedAlgorithm = event.target.value as SortingAlgorithm;
 
     setAlgorithm(selectedAlgorithm);
-
-    const newSteps =
-      selectedAlgorithm === "bubble"
-        ? bubbleSort(initialArray)
-        : selectedAlgorithm === "selection"
-          ? selectionSort(initialArray)
-          : selectedAlgorithm === "insertion"
-            ? insertionSort(initialArray)
-            : selectedAlgorithm === "merge"
-              ? mergeSort(initialArray)
-              : quickSort(initialArray);
-
-    setSteps(newSteps);
+    setSteps(sortingAlgorithms[selectedAlgorithm](initialArray));
     setStepIndex(-1);
     setIsPlaying(false);
   }
@@ -158,7 +163,6 @@ function App() {
       </header>
 
       <main className="main">
-        {/* Choose between Sorting and Binary Search */}
         <div className="mode-select">
           <button
             onClick={() => {
@@ -181,27 +185,26 @@ function App() {
           </button>
 
           <button
-            onClick={()=>{
+            onClick={() => {
               setMode("graph");
               setIsPlaying(false);
             }}
-            disabled={mode==="graph"}
+            disabled={mode === "graph"}
           >
             Graph Traversal
           </button>
 
-          <button 
-            onClick={()=>{
+          <button
+            onClick={() => {
               setMode("heap");
               setIsPlaying(false);
             }}
-            disabled={mode==="heap"}
+            disabled={mode === "heap"}
           >
             Heap
           </button>
         </div>
 
-        {/* Sorting mode */}
         {mode === "sorting" && (
           <>
             <div className="algorithm-select">
@@ -296,7 +299,6 @@ function App() {
           </>
         )}
 
-        {/* Binary Search mode */}
         {mode === "searching" && (
           <>
             <div className="search-info">
@@ -332,6 +334,7 @@ function App() {
               {initialSearchArray.map((value, index) => {
                 const isMid = searchMid === index;
                 const isInRange = index >= searchLow && index <= searchHigh;
+
                 const isDiscarded =
                   currentSearchStep !== null &&
                   currentSearchStep.status !== "found" &&
@@ -419,8 +422,10 @@ function App() {
             </p>
           </>
         )}
-        {mode==="graph"&&<GraphVisualizer/>}
-        {mode==="heap"&&<HeapVisualizer/>}
+
+        {mode === "graph" && <GraphVisualizer />}
+
+        {mode === "heap" && <HeapVisualizer />}
       </main>
     </div>
   );

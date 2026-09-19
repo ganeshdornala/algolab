@@ -1,22 +1,20 @@
 import { useState } from "react";
+import type { ChangeEvent } from "react";
 
 import {
     bfs,
     dfs,
     sampleGraph,
-    type TraversalStep,
 } from "./graphTraversal";
 
 import {
     dijkstra,
     sampleWeightedGraph,
-    type DijkstraStep,
 } from "./dijkstra";
 
 import {
     aStar,
     sampleHeuristic,
-    type AStarStep,
 } from "./aStar";
 
 type GraphAlgorithm = "bfs" | "dfs" | "dijkstra" | "astar";
@@ -51,6 +49,25 @@ const traversalEdges: [number, number][] = [
     [4, 5],
 ];
 
+/*
+ * The graph data is fixed, so calculate the algorithm steps once.
+ * This avoids repeating the calculations whenever React re-renders
+ * the visualizer.
+ */
+const traversalSteps = {
+    bfs: bfs(sampleGraph, 0),
+    dfs: dfs(sampleGraph, 0),
+};
+
+const dijkstraSteps = dijkstra(sampleWeightedGraph, 0);
+
+const aStarSteps = aStar(
+    sampleWeightedGraph,
+    0,
+    5,
+    sampleHeuristic,
+);
+
 function GraphVisualizer() {
     const [algorithm, setAlgorithm] = useState<GraphAlgorithm>("bfs");
     const [stepIndex, setStepIndex] = useState(-1);
@@ -60,58 +77,36 @@ function GraphVisualizer() {
             ? edges
             : traversalEdges;
 
-    const traversalSteps: TraversalStep[] =
-        algorithm === "bfs"
-            ? bfs(sampleGraph, 0)
-            : dfs(sampleGraph, 0);
-
-    const dijkstraSteps: DijkstraStep[] = dijkstra(sampleWeightedGraph, 0);
-
-    const aStarSteps: AStarStep[] = aStar(
-        sampleWeightedGraph,
-        0,
-        5,
-        sampleHeuristic,
-    );
-
     const steps =
         algorithm === "dijkstra"
             ? dijkstraSteps
             : algorithm === "astar"
                 ? aStarSteps
-                : traversalSteps;
+                : algorithm === "bfs"
+                    ? traversalSteps.bfs
+                    : traversalSteps.dfs;
 
     const currentStep =
         stepIndex === -1 ? null : steps[stepIndex];
 
-    const visitedNodes =
-        currentStep?.visited ?? [];
+    const visitedNodes = currentStep?.visited ?? [];
 
-    const currentNode =
-        currentStep?.current ?? -1;
+    const currentNode = currentStep?.current ?? -1;
 
-    const traversedEdges =
-        currentStep?.traversedEdges ?? [];
+    const traversedEdges = currentStep?.traversedEdges ?? [];
 
     const complexity =
-        algorithm === "dijkstra"
+        algorithm === "dijkstra" || algorithm === "astar"
             ? {
                 time: "O(V² + E) — linear scan implementation",
                 space: "O(V) auxiliary space",
             }
-            : algorithm === "astar"
-                ? {
-                    time: "O(V² + E) — linear scan implementation",
-                    space: "O(V) auxiliary space",
-                }
-                : {
-                    time: "O(V + E)",
-                    space: "O(V) auxiliary space",
-                };
+            : {
+                time: "O(V + E)",
+                space: "O(V) auxiliary space",
+            };
 
-    function handleAlgorithmChange(
-        event: React.ChangeEvent<HTMLSelectElement>,
-    ) {
+    function handleAlgorithmChange(event: ChangeEvent<HTMLSelectElement>) {
         const selected = event.target.value as GraphAlgorithm;
 
         setAlgorithm(selected);
@@ -152,26 +147,22 @@ function GraphVisualizer() {
 
     function getDistance(node: number) {
         if (algorithm === "astar") {
-            const aStarStep = currentStep as AStarStep | null;
-
-            if (!aStarStep) {
+            if (!currentStep || !("gScores" in currentStep)) {
                 return node === 0 ? 0 : Infinity;
             }
 
-            return aStarStep.gScores[node] ?? Infinity;
+            return currentStep.gScores[node] ?? Infinity;
         }
 
         if (algorithm !== "dijkstra") {
             return null;
         }
 
-        const dijkstraStep = currentStep as DijkstraStep | null;
-
-        if (!dijkstraStep) {
+        if (!currentStep || !("distances" in currentStep)) {
             return node === 0 ? 0 : Infinity;
         }
 
-        return dijkstraStep.distances[node] ?? Infinity;
+        return currentStep.distances[node] ?? Infinity;
     }
 
     return (
@@ -179,25 +170,40 @@ function GraphVisualizer() {
             <h2>Graph Traversal</h2>
 
             <div className="algorithm-select">
-                <label htmlFor="traversal-algorithm">Algorithm: </label>
+                <label htmlFor="traversal-algorithm">
+                    Algorithm:
+                </label>
 
                 <select
                     id="traversal-algorithm"
                     value={algorithm}
                     onChange={handleAlgorithmChange}
                 >
-                    <option value="bfs">Breadth-First Search (BFS)</option>
-                    <option value="dfs">Depth-First Search (DFS)</option>
-                    <option value="dijkstra">Dijkstra's Algorithm</option>
-                    <option value="astar">A* Search</option>
+                    <option value="bfs">
+                        Breadth-First Search (BFS)
+                    </option>
+
+                    <option value="dfs">
+                        Depth-First Search (DFS)
+                    </option>
+
+                    <option value="dijkstra">
+                        Dijkstra's Algorithm
+                    </option>
+
+                    <option value="astar">
+                        A* Search
+                    </option>
                 </select>
             </div>
 
             <div className="complexity-info">
                 <h3>Complexity</h3>
+
                 <p>
                     <strong>Time:</strong> {complexity.time}
                 </p>
+
                 <p>
                     <strong>Space:</strong> {complexity.space}
                 </p>
@@ -224,7 +230,7 @@ function GraphVisualizer() {
                     role="img"
                     aria-label={`${algorithm.toUpperCase()} graph visualization`}
                 >
-                    {/* Draw edges and their weights */}
+                    {/* Draw graph edges and their weights */}
                     {visibleEdges.map(([from, to]) => {
                         const start = nodePositions[from];
                         const end = nodePositions[to];
@@ -240,19 +246,21 @@ function GraphVisualizer() {
                                     y1={start.y}
                                     x2={end.x}
                                     y2={end.y}
-                                    className={`graph-edge ${isTraversed ? "traversed" : ""}`}
+                                    className={`graph-edge ${isTraversed ? "traversed" : ""
+                                        }`}
                                 />
 
-                                {(algorithm === "dijkstra" || algorithm === "astar") && (
-                                    <text
-                                        x={midX}
-                                        y={midY - 8}
-                                        className="edge-weight"
-                                        textAnchor="middle"
-                                    >
-                                        {getEdgeWeight(from, to)}
-                                    </text>
-                                )}
+                                {(algorithm === "dijkstra" ||
+                                    algorithm === "astar") && (
+                                        <text
+                                            x={midX}
+                                            y={midY - 8}
+                                            className="edge-weight"
+                                            textAnchor="middle"
+                                        >
+                                            {getEdgeWeight(from, to)}
+                                        </text>
+                                    )}
                             </g>
                         );
                     })}
@@ -294,17 +302,18 @@ function GraphVisualizer() {
                                     {nodeNumber}
                                 </text>
 
-                                {(algorithm === "dijkstra" || algorithm === "astar") && (
-                                    <text
-                                        x={position.x}
-                                        y={position.y + 43}
-                                        className="distance-label"
-                                        textAnchor="middle"
-                                    >
-                                        {algorithm === "astar" ? "g" : "d"}:{" "}
-                                        {distance === Infinity ? "∞" : distance}
-                                    </text>
-                                )}
+                                {(algorithm === "dijkstra" ||
+                                    algorithm === "astar") && (
+                                        <text
+                                            x={position.x}
+                                            y={position.y + 43}
+                                            className="distance-label"
+                                            textAnchor="middle"
+                                        >
+                                            {algorithm === "astar" ? "g" : "d"}:{" "}
+                                            {distance === Infinity ? "∞" : distance}
+                                        </text>
+                                    )}
                             </g>
                         );
                     })}
@@ -313,20 +322,28 @@ function GraphVisualizer() {
 
             <div className="graph-legend">
                 <span>
-                    <span className="legend-dot unvisited-dot" /> Unvisited
+                    <span className="legend-dot unvisited-dot" />
+                    Unvisited
                 </span>
+
                 <span>
-                    <span className="legend-dot visited-dot" /> Visited
+                    <span className="legend-dot visited-dot" />
+                    Visited
                 </span>
+
                 <span>
-                    <span className="legend-dot current-dot" /> Current node
+                    <span className="legend-dot current-dot" />
+                    Current node
                 </span>
             </div>
 
             {algorithm === "bfs" || algorithm === "dfs" ? (
                 <div className="frontier-info">
                     <p>
-                        <strong>{algorithm === "bfs" ? "Queue" : "Stack"}:</strong>{" "}
+                        <strong>
+                            {algorithm === "bfs" ? "Queue" : "Stack"}:
+                        </strong>{" "}
+
                         {currentStep &&
                             "frontier" in currentStep &&
                             currentStep.frontier.length > 0
@@ -336,15 +353,20 @@ function GraphVisualizer() {
 
                     <p>
                         <strong>Visited:</strong>{" "}
-                        {visitedNodes.length > 0 ? visitedNodes.join(", ") : "None"}
+                        {visitedNodes.length > 0
+                            ? visitedNodes.join(", ")
+                            : "None"}
                     </p>
                 </div>
             ) : algorithm === "dijkstra" ? (
                 <div className="frontier-info">
                     <p>
                         <strong>Visited:</strong>{" "}
-                        {visitedNodes.length > 0 ? visitedNodes.join(", ") : "None"}
+                        {visitedNodes.length > 0
+                            ? visitedNodes.join(", ")
+                            : "None"}
                     </p>
+
                     <p>
                         <strong>Current node:</strong>{" "}
                         {currentNode === -1 ? "None" : currentNode}
@@ -354,7 +376,9 @@ function GraphVisualizer() {
                 <div className="frontier-info">
                     <p>
                         <strong>Open set:</strong>{" "}
-                        {currentStep && "openSet" in currentStep &&
+
+                        {currentStep &&
+                            "openSet" in currentStep &&
                             currentStep.openSet.length > 0
                             ? currentStep.openSet.join(", ")
                             : "Empty"}
@@ -362,7 +386,9 @@ function GraphVisualizer() {
 
                     <p>
                         <strong>Visited:</strong>{" "}
-                        {visitedNodes.length > 0 ? visitedNodes.join(", ") : "None"}
+                        {visitedNodes.length > 0
+                            ? visitedNodes.join(", ")
+                            : "None"}
                     </p>
 
                     <p>
@@ -372,6 +398,7 @@ function GraphVisualizer() {
 
                     <p>
                         <strong>Scores (g, f):</strong>{" "}
+
                         {currentStep && "gScores" in currentStep
                             ? Object.keys(currentStep.gScores)
                                 .map(Number)
@@ -379,7 +406,8 @@ function GraphVisualizer() {
                                     const g = currentStep.gScores[node];
                                     const f = currentStep.fScores[node];
 
-                                    return `${node}: (${g === Infinity ? "∞" : g}, ${f === Infinity ? "∞" : f
+                                    return `${node}: (${g === Infinity ? "∞" : g
+                                        }, ${f === Infinity ? "∞" : f
                                         })`;
                                 })
                                 .join(" | ")
@@ -395,7 +423,10 @@ function GraphVisualizer() {
             )}
 
             <div className="controls">
-                <button onClick={handlePrevious} disabled={stepIndex === -1}>
+                <button
+                    onClick={handlePrevious}
+                    disabled={stepIndex === -1}
+                >
                     Previous Step
                 </button>
 
@@ -406,7 +437,10 @@ function GraphVisualizer() {
                     Next Step
                 </button>
 
-                <button onClick={handleReset} disabled={stepIndex === -1}>
+                <button
+                    onClick={handleReset}
+                    disabled={stepIndex === -1}
+                >
                     Reset
                 </button>
             </div>

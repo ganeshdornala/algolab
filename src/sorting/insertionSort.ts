@@ -1,34 +1,34 @@
 import type { SortStep } from "./bubbleSort";
 
-export function insertionSort(input:number[]):SortStep[]{
-    const array=[...input]
-    const steps:SortStep[]=[]
-    
-    for(let i=1;i<array.length;i++){
-        let j=i
+export function insertionSort(input: number[]): SortStep[] {
+    const array = [...input];
+    const steps: SortStep[] = [];
 
-        while(j>0){
+    for (let i = 1; i < array.length; i++) {
+        let j = i;
+
+        while (j > 0) {
             steps.push({
-                array:[...array],
-                comparing:[j-1,j],
-                operation:'compare',
-            })
+                array: [...array],
+                comparing: [j - 1, j],
+                operation: "compare",
+            });
 
-            if(array[j-1]<=array[j]){
-                break
+            if (array[j - 1] <= array[j]) {
+                break;
             }
 
-            ;[array[j-1],array[j]]=[array[j],array[j-1]]
+            [array[j - 1], array[j]] = [array[j], array[j - 1]];
 
             steps.push({
-                array:[...array],
-                comparing:[j-1,j],
-                operation:'swap',
-            })
+                array: [...array],
+                comparing: [j - 1, j],
+                operation: "swap",
+            });
 
-            j--
+            j--;
         }
     }
 
-    return steps
+    return steps;
 }

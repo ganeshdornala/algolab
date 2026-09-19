@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
+
 import { bfs, dfs, sampleGraph } from "./graphTraversal";
 
 describe("BFS", () => {
     it("visits nodes level by level", () => {
         const steps = bfs(sampleGraph, 0);
-
         const traversalOrder = steps.map((step) => step.current);
 
         expect(traversalOrder).toEqual([0, 1, 2, 3, 4, 5]);
@@ -42,7 +42,6 @@ describe("BFS", () => {
 describe("DFS", () => {
     it("explores depth-first using the defined neighbor order", () => {
         const steps = dfs(sampleGraph, 0);
-
         const traversalOrder = steps.map((step) => step.current);
 
         expect(traversalOrder).toEqual([0, 1, 3, 4, 5, 2]);

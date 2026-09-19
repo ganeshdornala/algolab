@@ -12,6 +12,8 @@ const initialValues = [5, 3, 8, 1, 4, 7, 2];
 
 type HeapOperation = "build" | "insert" | "extract";
 
+const SVG_WIDTH = 600;
+
 function HeapVisualizer() {
     const [heapType, setHeapType] = useState<HeapType>("min");
     const [operation, setOperation] = useState<HeapOperation>("build");
@@ -25,13 +27,13 @@ function HeapVisualizer() {
 
     const currentStep = steps[stepIndex];
     const heap = currentStep?.heap ?? [];
+    const activeIndices = currentStep?.activeIndices ?? [];
+    const activeIndexSet = new Set(activeIndices);
 
     function handleHeapTypeChange(event: ChangeEvent<HTMLSelectElement>) {
         const newType = event.target.value as HeapType;
 
         setHeapType(newType);
-
-        // Rebuild the steps for the newly selected heap type.
         setOperation("build");
         setSteps(buildHeapSteps(initialValues, newType));
         setStepIndex(0);
@@ -42,21 +44,24 @@ function HeapVisualizer() {
     }
 
     function handleRunOperation() {
-        const startingHeap = buildHeap(initialValues, heapType);
         let newSteps: HeapStep[];
 
         if (operation === "build") {
             newSteps = buildHeapSteps(initialValues, heapType);
-        } else if (operation === "insert") {
-            const value = Number(insertValue);
-
-            if (insertValue.trim() === "" || !Number.isFinite(value)) {
-                return;
-            }
-
-            newSteps = insertHeapSteps(startingHeap, value, heapType);
         } else {
-            newSteps = extractRootSteps(startingHeap, heapType);
+            const startingHeap = buildHeap(initialValues, heapType);
+
+            if (operation === "insert") {
+                const value = Number(insertValue);
+
+                if (insertValue.trim() === "" || !Number.isFinite(value)) {
+                    return;
+                }
+
+                newSteps = insertHeapSteps(startingHeap, value, heapType);
+            } else {
+                newSteps = extractRootSteps(startingHeap, heapType);
+            }
         }
 
         setSteps(newSteps);
@@ -69,21 +74,19 @@ function HeapVisualizer() {
 
     const levels = heap.length > 0 ? Math.ceil(Math.log2(heap.length + 1)) : 1;
     const svgHeight = Math.max(180, levels * 100 + 30);
-    const svgWidth = 600;
 
-    function getNodePosition(index: number) {
+    const nodePositions = heap.map((_, index) => {
         const level = Math.floor(Math.log2(index + 1));
         const positionInLevel = index - (2 ** level - 1);
         const nodesInLevel = 2 ** level;
 
-        const spacing = svgWidth / nodesInLevel;
-        const x = spacing * (positionInLevel + 0.5);
-        const y = 45 + level * 100;
+        const spacing = SVG_WIDTH / nodesInLevel;
 
-        return { x, y };
-    }
-
-    const activeIndices = currentStep?.activeIndices ?? [];
+        return {
+            x: spacing * (positionInLevel + 0.5),
+            y: 45 + level * 100,
+        };
+    });
 
     return (
         <section className="heap-visualizer">
@@ -176,7 +179,7 @@ function HeapVisualizer() {
                     <p>The heap is empty.</p>
                 ) : (
                     <svg
-                        viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+                        viewBox={`0 0 ${SVG_WIDTH} ${svgHeight}`}
                         role="img"
                         aria-label={`${heapType === "min" ? "Min" : "Max"} heap tree`}
                     >
@@ -187,12 +190,12 @@ function HeapVisualizer() {
                             }
 
                             const parentIndex = Math.floor((index - 1) / 2);
-                            const parent = getNodePosition(parentIndex);
-                            const child = getNodePosition(index);
+                            const parent = nodePositions[parentIndex];
+                            const child = nodePositions[index];
 
                             const edgeIsActive =
-                                activeIndices.includes(parentIndex) &&
-                                activeIndices.includes(index);
+                                activeIndexSet.has(parentIndex) &&
+                                activeIndexSet.has(index);
 
                             return (
                                 <line
@@ -212,8 +215,8 @@ function HeapVisualizer() {
 
                         {/* Draw heap nodes */}
                         {heap.map((value, index) => {
-                            const position = getNodePosition(index);
-                            const isActive = activeIndices.includes(index);
+                            const position = nodePositions[index];
+                            const isActive = activeIndexSet.has(index);
 
                             return (
                                 <g key={`node-${index}`}>
@@ -251,7 +254,7 @@ function HeapVisualizer() {
                     {heap.map((value, index) => (
                         <div
                             className={
-                                activeIndices.includes(index)
+                                activeIndexSet.has(index)
                                     ? "heap-array-item heap-active-item"
                                     : "heap-array-item"
                             }

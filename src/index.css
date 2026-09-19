@@ -232,3 +232,24 @@ button {
   background: #fbbf24;
   border: 1px solid #d97706;
 }
+
+.edge-weight {
+  fill: #111827;
+  font-size: 15px;
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: white;
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+
+.distance-label {
+  fill: #374151;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.graph-description {
+  text-align: center;
+  margin: 12px 0;
+}

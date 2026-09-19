@@ -7,18 +7,36 @@ import {
     type TraversalStep,
 } from "./graphTraversal";
 
-type TraversalAlgorithm = "bfs" | "dfs";
+import {
+    dijkstra,
+    sampleWeightedGraph,
+    type DijkstraStep,
+} from "./dijkstra";
+
+type GraphAlgorithm = "bfs" | "dfs" | "dijkstra";
 
 const nodePositions: Record<number, { x: number; y: number }> = {
     0: { x: 250, y: 50 },
     1: { x: 130, y: 150 },
     2: { x: 370, y: 150 },
     3: { x: 70, y: 280 },
-    4: { x: 190, y: 280 },
+    4: { x: 250, y: 280 },
     5: { x: 430, y: 280 },
 };
 
 const edges: [number, number][] = [
+    [0, 1],
+    [0, 2],
+    [1, 2],
+    [1, 3],
+    [2, 3],
+    [2, 4],
+    [3, 4],
+    [3, 5],
+    [4, 5],
+];
+
+const traversalEdges: [number, number][] = [
     [0, 1],
     [0, 2],
     [1, 3],
@@ -28,22 +46,36 @@ const edges: [number, number][] = [
 ];
 
 function GraphVisualizer() {
-    const [algorithm, setAlgorithm] = useState<TraversalAlgorithm>("bfs");
-    const [steps, setSteps] = useState<TraversalStep[]>(() =>
-        bfs(sampleGraph, 0),
-    );
+    const [algorithm, setAlgorithm] = useState<GraphAlgorithm>("bfs");
     const [stepIndex, setStepIndex] = useState(-1);
 
-    const currentStep = stepIndex === -1 ? null : steps[stepIndex];
+    const visibleEdges = algorithm === "dijkstra" ? edges : traversalEdges;
 
-    const visitedNodes = currentStep?.visited ?? [];
-    const currentNode = currentStep?.current ?? -1;
-    const frontier = currentStep?.frontier ?? [];
+    const traversalSteps: TraversalStep[] =
+        algorithm === "bfs"
+            ? bfs(sampleGraph, 0)
+            : dfs(sampleGraph, 0);
+
+    const dijkstraSteps: DijkstraStep[] = dijkstra(sampleWeightedGraph, 0);
+
+    const steps = algorithm === "dijkstra" ? dijkstraSteps : traversalSteps;
+
+    const currentStep =
+        stepIndex === -1 ? null : steps[stepIndex];
+
+    const visitedNodes =
+        currentStep?.visited ?? [];
+
+    const currentNode =
+        currentStep?.current ?? -1;
+
+    const traversedEdges =
+        currentStep?.traversedEdges ?? [];
 
     const complexity =
-        algorithm === "bfs"
+        algorithm === "dijkstra"
             ? {
-                time: "O(V + E)",
+                time: "O(V² + E) — linear scan implementation",
                 space: "O(V) auxiliary space",
             }
             : {
@@ -54,14 +86,9 @@ function GraphVisualizer() {
     function handleAlgorithmChange(
         event: React.ChangeEvent<HTMLSelectElement>,
     ) {
-        const selected = event.target.value as TraversalAlgorithm;
+        const selected = event.target.value as GraphAlgorithm;
 
         setAlgorithm(selected);
-
-        const newSteps =
-            selected === "bfs" ? bfs(sampleGraph, 0) : dfs(sampleGraph, 0);
-
-        setSteps(newSteps);
         setStepIndex(-1);
     }
 
@@ -81,6 +108,37 @@ function GraphVisualizer() {
         setStepIndex(-1);
     }
 
+    function isTraversedEdge(from: number, to: number) {
+        return traversedEdges.some(
+            ([edgeFrom, edgeTo]) =>
+                (edgeFrom === from && edgeTo === to) ||
+                (edgeFrom === to && edgeTo === from),
+        );
+    }
+
+    function getEdgeWeight(from: number, to: number) {
+        const edge = sampleWeightedGraph[from]?.find(
+            (item) => item.node === to,
+        );
+
+        return edge?.weight ?? "";
+    }
+
+    function getDistance(node: number) {
+        if (algorithm !== "dijkstra") {
+            return null;
+        }
+
+        const dijkstraStep =
+            currentStep as DijkstraStep | null;
+
+        if (!dijkstraStep) {
+            return node === 0 ? 0 : Infinity;
+        }
+
+        return dijkstraStep.distances[node] ?? Infinity;
+    }
+
     return (
         <section className="graph-visualizer">
             <h2>Graph Traversal</h2>
@@ -95,6 +153,7 @@ function GraphVisualizer() {
                 >
                     <option value="bfs">Breadth-First Search (BFS)</option>
                     <option value="dfs">Depth-First Search (DFS)</option>
+                    <option value="dijkstra">Dijkstra's Algorithm</option>
                 </select>
             </div>
 
@@ -108,33 +167,49 @@ function GraphVisualizer() {
                 </p>
             </div>
 
+            {algorithm === "dijkstra" && (
+                <p className="graph-description">
+                    Dijkstra finds shortest distances from node 0.
+                    All edge weights are non-negative.
+                </p>
+            )}
+
             <div className="graph-canvas">
                 <svg
                     viewBox="0 0 500 340"
                     role="img"
-                    aria-label={`Graph showing ${algorithm.toUpperCase()} traversal`}
+                    aria-label={`${algorithm.toUpperCase()} graph visualization`}
                 >
-                    {/* Draw graph edges */}
-                    {edges.map(([from, to]) => {
+                    {/* Draw edges and their weights */}
+                    {visibleEdges.map(([from, to]) => {
                         const start = nodePositions[from];
                         const end = nodePositions[to];
+                        const isTraversed = isTraversedEdge(from, to);
 
-                        const isTraversed =
-                            currentStep?.traversedEdges.some(
-                                ([edgeFrom, edgeTo]) =>
-                                    (edgeFrom === from && edgeTo === to) ||
-                                    (edgeFrom === to && edgeTo === from),
-                            ) ?? false;
+                        const midX = (start.x + end.x) / 2;
+                        const midY = (start.y + end.y) / 2;
 
                         return (
-                            <line
-                                key={`${from}-${to}`}
-                                x1={start.x}
-                                y1={start.y}
-                                x2={end.x}
-                                y2={end.y}
-                                className={`graph-edge ${isTraversed ? "traversed" : ""}`}
-                            />
+                            <g key={`${from}-${to}`}>
+                                <line
+                                    x1={start.x}
+                                    y1={start.y}
+                                    x2={end.x}
+                                    y2={end.y}
+                                    className={`graph-edge ${isTraversed ? "traversed" : ""}`}
+                                />
+
+                                {algorithm === "dijkstra" && (
+                                    <text
+                                        x={midX}
+                                        y={midY - 8}
+                                        className="edge-weight"
+                                        textAnchor="middle"
+                                    >
+                                        {getEdgeWeight(from, to)}
+                                    </text>
+                                )}
+                            </g>
                         );
                     })}
 
@@ -154,6 +229,8 @@ function GraphVisualizer() {
                             nodeClass += " current";
                         }
 
+                        const distance = getDistance(nodeNumber);
+
                         return (
                             <g key={nodeNumber}>
                                 <circle
@@ -172,6 +249,17 @@ function GraphVisualizer() {
                                 >
                                     {nodeNumber}
                                 </text>
+
+                                {algorithm === "dijkstra" && (
+                                    <text
+                                        x={position.x}
+                                        y={position.y + 43}
+                                        className="distance-label"
+                                        textAnchor="middle"
+                                    >
+                                        d: {distance === Infinity ? "∞" : distance}
+                                    </text>
+                                )}
                             </g>
                         );
                     })}
@@ -190,17 +278,33 @@ function GraphVisualizer() {
                 </span>
             </div>
 
-            <div className="frontier-info">
-                <p>
-                    <strong>{algorithm === "bfs" ? "Queue" : "Stack"}:</strong>{" "}
-                    {frontier.length > 0 ? frontier.join(", ") : "Empty"}
-                </p>
+            {algorithm !== "dijkstra" ? (
+                <div className="frontier-info">
+                    <p>
+                        <strong>{algorithm === "bfs" ? "Queue" : "Stack"}:</strong>{" "}
+                        {currentStep && "frontier" in currentStep &&
+                            currentStep.frontier.length > 0
+                            ? currentStep.frontier.join(", ")
+                            : "Empty"}
+                    </p>
 
-                <p>
-                    <strong>Visited:</strong>{" "}
-                    {visitedNodes.length > 0 ? visitedNodes.join(", ") : "None"}
-                </p>
-            </div>
+                    <p>
+                        <strong>Visited:</strong>{" "}
+                        {visitedNodes.length > 0 ? visitedNodes.join(", ") : "None"}
+                    </p>
+                </div>
+            ) : (
+                <div className="frontier-info">
+                    <p>
+                        <strong>Visited:</strong>{" "}
+                        {visitedNodes.length > 0 ? visitedNodes.join(", ") : "None"}
+                    </p>
+                    <p>
+                        <strong>Current node:</strong>{" "}
+                        {currentNode === -1 ? "None" : currentNode}
+                    </p>
+                </div>
+            )}
 
             {currentStep && (
                 <p className="current-node-info">

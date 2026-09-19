@@ -1,75 +1,150 @@
-# React + TypeScript + Vite
+# AlgoLab — Algorithm Visualizer
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+AlgoLab is an interactive algorithm visualizer built with React, TypeScript, and Vite. It helps learners understand how algorithms work by displaying their operations step by step.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+### Sorting Algorithms
+Visualize the following sorting algorithms:
 
-## React Compiler
+- Bubble Sort
+- Selection Sort
+- Insertion Sort
+- Merge Sort
+- Quick Sort
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Features include step-by-step visualization, playback controls, speed controls, and a step counter.
 
-## Expanding the ESLint configuration
+### Binary Search
+- Visualize Binary Search on a fixed, sorted array.
+- Enter a target value to search for.
+- Step through the search process using Previous and Next controls.
+- View the current search range and result.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+**Note:** Binary Search requires the array to be sorted in ascending order.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Graph Traversal
+Visualize:
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- Breadth-First Search (BFS)
+- Depth-First Search (DFS)
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Follow the traversal process through the graph, including visited nodes, the current node, and the frontier.
 
+### Shortest-Path Algorithms
+Visualize:
+
+- Dijkstra's Algorithm
+- A* Search
+
+Explore how the algorithms process a weighted graph and update distance or score information.
+
+### Heap Operations
+Explore both Min-Heaps and Max-Heaps.
+
+Supported operations:
+
+- Build Heap
+- Insert
+- Extract Root
+
+Step through the operations and observe changes in the binary tree and array representations.
+
+## Tech Stack
+
+- React
+- TypeScript
+- Vite
+- CSS
+- Vitest
+
+## Getting Started
+
+### Prerequisites
+
+Install the following:
+
+- Node.js
+- npm
+
+### Installation
+
+Clone the repository:
+
+```bash
+git clone https://github.com/ganeshdornala/algolab.git
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+Navigate to the project directory:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+cd algolab
 ```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+### Run the Development Server
+
+```bash
+npm run dev
+```
+
+Open the local URL displayed in the terminal.
+
+### Run Tests
+
+```bash
+npm test
+```
+
+Vitest runs in watch mode by default. Press `q` to exit.
+
+### Create a Production Build
+
+```bash
+npm run build
+```
+
+## Project Structure
+
+```text
+src/
+├── graph/
+│   ├── aStar.ts
+│   ├── aStar.test.ts
+│   ├── dijkstra.ts
+│   ├── dijkstra.test.ts
+│   ├── graphTraversal.ts
+│   ├── graphTraversal.test.ts
+│   └── GraphVisualizer.tsx
+├── heap/
+│   ├── heap.ts
+│   ├── heap.test.ts
+│   └── HeapVisualizer.tsx
+├── searching/
+│   └── binarySearch.ts
+├── sorting/
+│   └── sorting.ts
+├── App.tsx
+└── index.css
+```
+
+## Testing
+
+The project includes automated tests for its algorithm implementations.
+
+At the time of this README update, the test suite contains **96 passing tests across 6 test files**.
+
+## Project Goals
+
+AlgoLab is a learning-focused project intended to make core algorithms easier to explore and understand through visual representations.
+
+The project is designed to remain lightweight and free to develop and use.
+
+## License
+
+No license has been specified yet.

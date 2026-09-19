@@ -11,6 +11,8 @@ import { binarySearch, type SearchStep } from "./searching/binarySearch";
 
 import GraphVisualizer from "./graph/GraphVisualizer";
 
+import HeapVisualizer from "./heap/HeapVisualizer";
+
 const initialArray = [5, 2, 8, 1, 4];
 const initialSearchArray = [1, 2, 3, 4, 5];
 
@@ -39,7 +41,7 @@ const algorithmInfo: Record<string, { time: string; space: string }> = {
 
 function App() {
   const [mode, setMode] = useState<
-    "sorting"|"searching"|"graph"
+    "sorting"|"searching"|"graph"|"heap"
   >("sorting");
 
   const [algorithm, setAlgorithm] = useState("bubble");
@@ -186,6 +188,16 @@ function App() {
             disabled={mode==="graph"}
           >
             Graph Traversal
+          </button>
+
+          <button 
+            onClick={()=>{
+              setMode("heap");
+              setIsPlaying(false);
+            }}
+            disabled={mode==="heap"}
+          >
+            Heap
           </button>
         </div>
 
@@ -408,6 +420,7 @@ function App() {
           </>
         )}
         {mode==="graph"&&<GraphVisualizer/>}
+        {mode==="heap"&&<HeapVisualizer/>}
       </main>
     </div>
   );

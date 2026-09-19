@@ -205,7 +205,7 @@ button {
   margin: 12px 0;
 }
 
-.graph-legend > span {
+.graph-legend>span {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -252,4 +252,78 @@ button {
 .graph-description {
   text-align: center;
   margin: 12px 0;
+}
+
+.heap-visualizer {
+  margin-top: 2rem;
+}
+
+.heap-tree,
+.heap-array {
+  margin-top: 1.5rem;
+}
+
+.heap-tree svg {
+  display: block;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.heap-array-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.heap-array-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0.5rem;
+  border: 1px solid #aaa;
+  border-radius: 6px;
+}
+
+.heap-array-index {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.heap-operation-controls,
+.heap-step-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.heap-operation-controls input {
+  width: 90px;
+  padding: 0.4rem;
+}
+
+.heap-step-description {
+  min-height: 1.5rem;
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.heap-active-node {
+  stroke: #d97706;
+  stroke-width: 4px;
+}
+
+.heap-active-edge {
+  stroke: #d97706;
+  stroke-width: 4px;
+}
+
+.heap-active-item {
+  border: 2px solid #d97706;
 }

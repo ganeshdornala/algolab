@@ -13,7 +13,13 @@ import {
     type DijkstraStep,
 } from "./dijkstra";
 
-type GraphAlgorithm = "bfs" | "dfs" | "dijkstra";
+import {
+    aStar,
+    sampleHeuristic,
+    type AStarStep,
+} from "./aStar";
+
+type GraphAlgorithm = "bfs" | "dfs" | "dijkstra" | "astar";
 
 const nodePositions: Record<number, { x: number; y: number }> = {
     0: { x: 250, y: 50 },
@@ -49,7 +55,10 @@ function GraphVisualizer() {
     const [algorithm, setAlgorithm] = useState<GraphAlgorithm>("bfs");
     const [stepIndex, setStepIndex] = useState(-1);
 
-    const visibleEdges = algorithm === "dijkstra" ? edges : traversalEdges;
+    const visibleEdges =
+        algorithm === "dijkstra" || algorithm === "astar"
+            ? edges
+            : traversalEdges;
 
     const traversalSteps: TraversalStep[] =
         algorithm === "bfs"
@@ -58,7 +67,19 @@ function GraphVisualizer() {
 
     const dijkstraSteps: DijkstraStep[] = dijkstra(sampleWeightedGraph, 0);
 
-    const steps = algorithm === "dijkstra" ? dijkstraSteps : traversalSteps;
+    const aStarSteps: AStarStep[] = aStar(
+        sampleWeightedGraph,
+        0,
+        5,
+        sampleHeuristic,
+    );
+
+    const steps =
+        algorithm === "dijkstra"
+            ? dijkstraSteps
+            : algorithm === "astar"
+                ? aStarSteps
+                : traversalSteps;
 
     const currentStep =
         stepIndex === -1 ? null : steps[stepIndex];
@@ -78,10 +99,15 @@ function GraphVisualizer() {
                 time: "O(V² + E) — linear scan implementation",
                 space: "O(V) auxiliary space",
             }
-            : {
-                time: "O(V + E)",
-                space: "O(V) auxiliary space",
-            };
+            : algorithm === "astar"
+                ? {
+                    time: "O(V² + E) — linear scan implementation",
+                    space: "O(V) auxiliary space",
+                }
+                : {
+                    time: "O(V + E)",
+                    space: "O(V) auxiliary space",
+                };
 
     function handleAlgorithmChange(
         event: React.ChangeEvent<HTMLSelectElement>,
@@ -125,12 +151,21 @@ function GraphVisualizer() {
     }
 
     function getDistance(node: number) {
+        if (algorithm === "astar") {
+            const aStarStep = currentStep as AStarStep | null;
+
+            if (!aStarStep) {
+                return node === 0 ? 0 : Infinity;
+            }
+
+            return aStarStep.gScores[node] ?? Infinity;
+        }
+
         if (algorithm !== "dijkstra") {
             return null;
         }
 
-        const dijkstraStep =
-            currentStep as DijkstraStep | null;
+        const dijkstraStep = currentStep as DijkstraStep | null;
 
         if (!dijkstraStep) {
             return node === 0 ? 0 : Infinity;
@@ -154,6 +189,7 @@ function GraphVisualizer() {
                     <option value="bfs">Breadth-First Search (BFS)</option>
                     <option value="dfs">Depth-First Search (DFS)</option>
                     <option value="dijkstra">Dijkstra's Algorithm</option>
+                    <option value="astar">A* Search</option>
                 </select>
             </div>
 
@@ -170,6 +206,14 @@ function GraphVisualizer() {
             {algorithm === "dijkstra" && (
                 <p className="graph-description">
                     Dijkstra finds shortest distances from node 0.
+                    All edge weights are non-negative.
+                </p>
+            )}
+
+            {algorithm === "astar" && (
+                <p className="graph-description">
+                    A* searches for a path from node 0 to node 5 using
+                    the path cost (g-score) and heuristic estimate (h-score).
                     All edge weights are non-negative.
                 </p>
             )}
@@ -199,7 +243,7 @@ function GraphVisualizer() {
                                     className={`graph-edge ${isTraversed ? "traversed" : ""}`}
                                 />
 
-                                {algorithm === "dijkstra" && (
+                                {(algorithm === "dijkstra" || algorithm === "astar") && (
                                     <text
                                         x={midX}
                                         y={midY - 8}
@@ -250,14 +294,15 @@ function GraphVisualizer() {
                                     {nodeNumber}
                                 </text>
 
-                                {algorithm === "dijkstra" && (
+                                {(algorithm === "dijkstra" || algorithm === "astar") && (
                                     <text
                                         x={position.x}
                                         y={position.y + 43}
                                         className="distance-label"
                                         textAnchor="middle"
                                     >
-                                        d: {distance === Infinity ? "∞" : distance}
+                                        {algorithm === "astar" ? "g" : "d"}:{" "}
+                                        {distance === Infinity ? "∞" : distance}
                                     </text>
                                 )}
                             </g>
@@ -278,11 +323,12 @@ function GraphVisualizer() {
                 </span>
             </div>
 
-            {algorithm !== "dijkstra" ? (
+            {algorithm === "bfs" || algorithm === "dfs" ? (
                 <div className="frontier-info">
                     <p>
                         <strong>{algorithm === "bfs" ? "Queue" : "Stack"}:</strong>{" "}
-                        {currentStep && "frontier" in currentStep &&
+                        {currentStep &&
+                            "frontier" in currentStep &&
                             currentStep.frontier.length > 0
                             ? currentStep.frontier.join(", ")
                             : "Empty"}
@@ -293,7 +339,7 @@ function GraphVisualizer() {
                         {visitedNodes.length > 0 ? visitedNodes.join(", ") : "None"}
                     </p>
                 </div>
-            ) : (
+            ) : algorithm === "dijkstra" ? (
                 <div className="frontier-info">
                     <p>
                         <strong>Visited:</strong>{" "}
@@ -302,6 +348,42 @@ function GraphVisualizer() {
                     <p>
                         <strong>Current node:</strong>{" "}
                         {currentNode === -1 ? "None" : currentNode}
+                    </p>
+                </div>
+            ) : (
+                <div className="frontier-info">
+                    <p>
+                        <strong>Open set:</strong>{" "}
+                        {currentStep && "openSet" in currentStep &&
+                            currentStep.openSet.length > 0
+                            ? currentStep.openSet.join(", ")
+                            : "Empty"}
+                    </p>
+
+                    <p>
+                        <strong>Visited:</strong>{" "}
+                        {visitedNodes.length > 0 ? visitedNodes.join(", ") : "None"}
+                    </p>
+
+                    <p>
+                        <strong>Current node:</strong>{" "}
+                        {currentNode === -1 ? "None" : currentNode}
+                    </p>
+
+                    <p>
+                        <strong>Scores (g, f):</strong>{" "}
+                        {currentStep && "gScores" in currentStep
+                            ? Object.keys(currentStep.gScores)
+                                .map(Number)
+                                .map((node) => {
+                                    const g = currentStep.gScores[node];
+                                    const f = currentStep.fScores[node];
+
+                                    return `${node}: (${g === Infinity ? "∞" : g}, ${f === Infinity ? "∞" : f
+                                        })`;
+                                })
+                                .join(" | ")
+                            : "Not available"}
                     </p>
                 </div>
             )}

@@ -9,6 +9,8 @@ import { quickSort } from "./sorting/quickSort";
 
 import { binarySearch, type SearchStep } from "./searching/binarySearch";
 
+import GraphVisualizer from "./graph/GraphVisualizer";
+
 const initialArray = [5, 2, 8, 1, 4];
 const initialSearchArray = [1, 2, 3, 4, 5];
 
@@ -36,7 +38,9 @@ const algorithmInfo: Record<string, { time: string; space: string }> = {
 };
 
 function App() {
-  const [mode, setMode] = useState<"sorting" | "searching">("sorting");
+  const [mode, setMode] = useState<
+    "sorting"|"searching"|"graph"
+  >("sorting");
 
   const [algorithm, setAlgorithm] = useState("bubble");
   const [steps, setSteps] = useState<SortStep[]>(() => bubbleSort(initialArray));
@@ -172,6 +176,16 @@ function App() {
             disabled={mode === "searching"}
           >
             Binary Search
+          </button>
+
+          <button
+            onClick={()=>{
+              setMode("graph");
+              setIsPlaying(false);
+            }}
+            disabled={mode==="graph"}
+          >
+            Graph Traversal
           </button>
         </div>
 
@@ -393,6 +407,7 @@ function App() {
             </p>
           </>
         )}
+        {mode==="graph"&&<GraphVisualizer/>}
       </main>
     </div>
   );

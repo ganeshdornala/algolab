@@ -145,3 +145,90 @@ button {
 .bar.discarded {
   opacity: 0.3;
 }
+
+/* Graph visualization */
+.graph-canvas {
+  width: 100%;
+  max-width: 600px;
+  margin: 24px auto;
+}
+
+.graph-canvas svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.graph-edge {
+  stroke: #9ca3af;
+  stroke-width: 4;
+  stroke-linecap: round;
+  transition: stroke 0.2s ease, stroke-width 0.2s ease;
+}
+
+.graph-edge.traversed {
+  stroke: #2563eb;
+  stroke-width: 6;
+}
+
+.graph-node {
+  fill: #d1d5db;
+  stroke: #6b7280;
+  stroke-width: 2;
+  transition: fill 0.2s ease, stroke 0.2s ease;
+}
+
+.graph-node.visited {
+  fill: #86efac;
+  stroke: #16a34a;
+}
+
+.graph-node.current {
+  fill: #fbbf24;
+  stroke: #d97706;
+  stroke-width: 4;
+}
+
+.graph-node-label {
+  fill: #111827;
+  font-size: 18px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.graph-legend {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 12px 0;
+}
+
+.graph-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.unvisited-dot {
+  background: #d1d5db;
+  border: 1px solid #6b7280;
+}
+
+.visited-dot {
+  background: #86efac;
+  border: 1px solid #16a34a;
+}
+
+.current-dot {
+  background: #fbbf24;
+  border: 1px solid #d97706;
+}
